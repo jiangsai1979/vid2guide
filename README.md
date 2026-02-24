@@ -84,6 +84,16 @@ cp claude-code/commands/vid2guide.md /path/to/your/project/.claude/commands/
 cp claude-code/skills/vid2guide.md /path/to/your/project/.claude/skills/
 ```
 
+### 5. Set up Codex skill (optional)
+
+Install directly from GitHub:
+
+```bash
+python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo jiangsai1979/vid2guide \
+  --path skills/vid2guide
+```
+
 ## Usage
 
 ### As a Claude Code Skill (recommended)
@@ -135,6 +145,9 @@ vid2guide/
 │   │   └── vid2guide.md  # /vid2guide slash command
 │   └── skills/
 │       └── vid2guide.md  # Skill knowledge file
+├── skills/
+│   └── vid2guide/
+│       └── SKILL.md      # Codex-installable skill
 └── README.md
 ```
 

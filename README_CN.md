@@ -81,6 +81,16 @@ cp claude-code/commands/vid2guide.md /你的项目/.claude/commands/
 cp claude-code/skills/vid2guide.md /你的项目/.claude/skills/
 ```
 
+### 5. 配置 Codex Skill（可选）
+
+可直接从 GitHub 安装：
+
+```bash
+python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo jiangsai1979/vid2guide \
+  --path skills/vid2guide
+```
+
 ## 使用方式
 
 ### 作为 Claude Code Skill（推荐）
@@ -132,6 +142,9 @@ vid2guide/
 │   │   └── vid2guide.md  # /vid2guide 斜杠命令
 │   └── skills/
 │       └── vid2guide.md  # Skill 知识文件
+├── skills/
+│   └── vid2guide/
+│       └── SKILL.md      # 可被 Codex 安装的 Skill
 ├── README.md             # English
 └── README_CN.md          # 中文
 ```
