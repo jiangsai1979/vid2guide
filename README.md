@@ -1,112 +1,151 @@
 # vid2guide
 
-Turn any video into a step-by-step tutorial with screenshots, powered by AI.
+A Claude Code skill that turns YouTube videos into step-by-step tutorials with screenshots.
 
-**vid2guide** takes a video file, transcribes it with Whisper, uses AI to identify operation steps, captures screenshots at key moments, and generates a polished Markdown + PDF tutorial — all in one command.
+Type `/vid2guide <YouTube URL>` in Claude Code, and it will automatically download the video, transcribe it, identify operation steps, capture screenshots, and generate a Markdown + PDF tutorial.
+
+## Demo
+
+```
+/vid2guide https://www.youtube.com/watch?v=4VPoGSeI2sw
+```
+
+Output:
+```
+2026-02-24/BMad-V6/
+├── images/
+│   ├── step_01.jpg ~ step_08.jpg
+├── steps.json              # Structured step data
+├── operation_guide.md      # Markdown tutorial with screenshots
+├── operation_guide.pdf     # PDF version (images embedded)
+├── video.mp4               # Original video
+└── video.srt               # Whisper-generated subtitles
+```
 
 ## How It Works
 
 ```
-Video → Whisper STT → AI Step Analysis → ffmpeg Screenshots → AI Vision Enhancement → Markdown/PDF
+YouTube URL → yt-dlp Download → Whisper STT → AI Step Analysis → ffmpeg Screenshots → AI Vision Enhancement → Markdown/PDF
 ```
 
-1. **Whisper transcription** — Extracts speech-to-text with timestamps (`.srt`)
-2. **AI step identification** — Doubao LLM analyzes subtitles to identify operation steps with confidence scores
-3. **Screenshot capture** — ffmpeg grabs frames at each step's key timestamp
-4. **AI vision enhancement** — For low-confidence steps, sends screenshots to AI for description refinement
-5. **Document generation** — Produces structured Markdown tutorial with embedded screenshots
-6. **PDF export** — Converts Markdown to PDF with images embedded
+1. **yt-dlp download** — Downloads YouTube video (720p)
+2. **Whisper transcription** — Extracts speech-to-text with timestamps
+3. **AI step identification** — Doubao LLM analyzes subtitles to identify steps with confidence scores
+4. **Screenshot capture** — ffmpeg grabs frames at each step's key timestamp
+5. **AI vision enhancement** — For low-confidence steps, sends screenshots to AI for refinement
+6. **Document generation** — Produces Markdown + PDF tutorial with embedded screenshots
 
-## Quick Start
+## Installation
 
-### Prerequisites
-
-- Python 3.11+
-- [ffmpeg](https://ffmpeg.org/) installed (`brew install ffmpeg`)
-- [Volcengine ARK API Key](https://console.volcengine.com/ark) (for Doubao LLM)
-
-### Installation
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/jiangsai1979/vid2guide.git
 cd vid2guide
+```
+
+### 2. Install dependencies
+
+```bash
+# Recommended: use conda for isolation
+conda create -n vid2guide python=3.11 -y
+conda activate vid2guide
+
+# Install llvmlite via conda first (pip build may fail)
+conda install numba -y
+
+# Install Python packages
 pip install -r requirements.txt
 ```
 
-### Configuration
+System dependencies:
+- [ffmpeg](https://ffmpeg.org/): `brew install ffmpeg` (macOS) or `apt install ffmpeg` (Linux)
+
+### 3. Configure API Key
 
 ```bash
 cp .env.example .env
-# Edit .env and add your ARK_API_KEY
 ```
 
-### Usage
+Edit `.env` and add your Volcengine ARK API Key:
+- Go to https://console.volcengine.com/ark
+- Create an API Key
+- Paste it into `ARK_API_KEY=`
+
+### 4. Set up Claude Code skill
+
+Copy the skill and command files to your project:
 
 ```bash
-# From a YouTube URL (auto-download + generate tutorial)
+# From the vid2guide repo root
+cp claude-code/commands/vid2guide.md /path/to/your/project/.claude/commands/
+cp claude-code/skills/vid2guide.md /path/to/your/project/.claude/skills/
+```
+
+## Usage
+
+### As a Claude Code Skill (recommended)
+
+In Claude Code, type:
+
+```
+/vid2guide https://www.youtube.com/watch?v=xxx
+```
+
+That's it. Claude will handle everything automatically.
+
+### As a CLI tool
+
+```bash
+# From a YouTube URL
 python vid2guide.py --url "https://www.youtube.com/watch?v=xxx"
 
 # From a local video file
 python vid2guide.py --video_path your_video.mp4
 
-# Use existing subtitles (skip Whisper)
-python vid2guide.py --video_path your_video.mp4 --srt_path subtitles.srt
-
-# Enable web search to enrich documentation
-python vid2guide.py --url "https://www.youtube.com/watch?v=xxx" --web_search
+# With options
+python vid2guide.py --url "URL" --output_dir ./output --web_search
 ```
 
-### Parameters
+### CLI Parameters
 
 | Parameter | Description | Default |
 |---|---|---|
-| `--url` | YouTube URL (auto-download with yt-dlp) | — |
-| `--video_path` | Path to local video file | Auto-detect MP4 in current dir |
-| `--srt_path` | Path to SRT subtitle file | Auto-generate with Whisper |
-| `--output_dir` | Output directory | Named after video file |
-| `--whisper_model` | Whisper model size | `base` |
+| `--url` | YouTube URL (auto-download) | — |
+| `--video_path` | Path to local video file | Auto-detect MP4 |
+| `--srt_path` | Path to existing SRT file | Auto-generate |
+| `--output_dir` | Output directory | Named after video |
+| `--whisper_model` | Whisper model: tiny/base/small/medium/large | `base` |
 | `--max_vision` | Max AI vision enhancement calls | `4` |
 | `--web_search` | Enable web search enrichment | Off |
 | `--use_video` | Upload video to AI (expensive) | Off |
-| `--fps` | Frame extraction rate | `1` |
-| `--api_key` | ARK API Key (overrides .env) | From `.env` |
 
-## Output
+## Project Structure
 
 ```
-output_dir/
-├── images/
-│   ├── step_01.jpg
-│   ├── step_02.jpg
-│   └── ...
-├── steps.json            # Structured step data
-├── operation_guide.md    # Markdown tutorial
-├── operation_guide.pdf   # PDF tutorial (images embedded)
-├── video.mp4             # Original video copy
-└── video.srt             # Subtitle file
+vid2guide/
+├── vid2guide.py          # Core engine
+├── requirements.txt
+├── .env.example          # API key template
+├── LICENSE
+├── claude-code/
+│   ├── commands/
+│   │   └── vid2guide.md  # /vid2guide slash command
+│   └── skills/
+│       └── vid2guide.md  # Skill knowledge file
+└── README.md
 ```
-
-## Use as a Claude Code Skill
-
-vid2guide can be used as a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) custom command. Copy the files from the `claude-code/` directory:
-
-```bash
-# From the vid2guide repo root
-cp -r claude-code/commands/ /path/to/your/project/.claude/commands/
-cp -r claude-code/skills/ /path/to/your/project/.claude/skills/
-```
-
-Then in Claude Code, type `/vid2guide https://youtube.com/watch?v=xxx` to auto-download and generate a tutorial.
 
 ## Credits
 
 Built on top of [tech-shrimp/video_2_markdown_doubao](https://github.com/tech-shrimp/video_2_markdown_doubao). Key improvements:
 
+- YouTube download integration (yt-dlp)
 - Subtitle-driven mode (much cheaper than video upload)
 - Confidence scoring + AI vision enhancement
 - PDF output with embedded images
 - Web search enrichment (optional)
-- Unified output directory management
+- Claude Code skill integration
 
 ## License
 
