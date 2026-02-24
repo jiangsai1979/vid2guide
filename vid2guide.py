@@ -295,7 +295,10 @@ class VideoAnalyzerAgent:
             str(output_path), "-y",
         ]
         logging.info("生成截图：step=%s, time=%ss, file=%s", step_num, timestamp, output_path)
-        subprocess.run(cmd, check=False, capture_output=True)
+        result = subprocess.run(cmd, check=False, capture_output=True)
+        if not output_path.exists():
+            stderr_text = result.stderr.decode('utf-8', errors='replace') if isinstance(result.stderr, bytes) else (result.stderr or '')
+            logging.warning("截图生成失败：step=%s, time=%ss\nffmpeg stderr: %s", step_num, timestamp, stderr_text.strip())
         return output_path
 
     def generate_screenshots_from_steps(self, video_path: str, steps: List[Dict], output_dir: str = "images") -> List[Path]:
@@ -319,7 +322,16 @@ class VideoAnalyzerAgent:
                 video_path, output_dir_path, timestamp, step_num=step_num
             )
             screenshot_paths.append(screenshot_path)
-            print(f"已生成截图: {screenshot_path}")
+            if screenshot_path.exists():
+                print(f"已生成截图: {screenshot_path}")
+
+        total = len(screenshot_paths)
+        success = sum(1 for p in screenshot_paths if p.exists())
+        if success < total:
+            print(f"警告：截图生成不完整，成功 {success}/{total} 张")
+        if success == 0 and total > 0:
+            raise RuntimeError(f"所有截图均生成失败（共 {total} 张），请检查 ffmpeg 是否支持该视频编码格式")
+        print(f"截图生成完成：{success}/{total} 张")
 
         return screenshot_paths
 
@@ -658,9 +670,11 @@ def download_youtube(url: str, output_dir: str = ".") -> str:
 
     # Use yt-dlp to download, limit to 720p
     output_template = str(output_dir / "%(title)s.%(ext)s")
+    # Use bv*+ba for sites with separate video/audio streams (e.g. Bilibili)
     cmd = [
         "yt-dlp",
-        "-f", "best[height<=720]",
+        "-f", "bv*[height<=720][vcodec^=avc]+ba/bv*[height<=720]+ba/best[height<=720]/best",
+        "--merge-output-format", "mp4",
         "-o", output_template,
         "--print", "after_move:filepath",
         url,

@@ -69,6 +69,8 @@ eval "$(conda shell.bash hook)" && conda activate vid2guide && python vid2guide.
 | Whisper 模型下载慢 | 首次运行需等待，后续有缓存 |
 | ARK API 404 | 检查 `.env` 中 API Key，模型名应为 `doubao-seed-2-0-pro-260215` |
 | ffmpeg 未安装 | `brew install ffmpeg` |
+| 截图生成不完整（部分失败） | 检查日志中的 WARNING 信息，通常是 ffmpeg 不支持视频编码格式（如 AV1） |
+| 所有截图均生成失败（RuntimeError） | 确认 ffmpeg 支持该视频编码；可尝试安装完整版 ffmpeg: `brew install ffmpeg` |
 | conda 环境不存在 | `conda create -n vid2guide python=3.11 && conda activate vid2guide && pip install -r requirements.txt` |
 
 ## 关键文件

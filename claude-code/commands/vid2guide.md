@@ -15,4 +15,5 @@ YouTube URL: $ARGUMENTS
 ## 错误处理
 - yt-dlp 失败 → `pip install --upgrade yt-dlp` 后重试
 - ARK API 404 → 检查 vid2guide/.env 中 API Key，模型名 doubao-seed-2-0-pro-260215
+- 截图全部失败（RuntimeError） → ffmpeg 不支持视频编码，`brew install ffmpeg` 安装完整版
 - conda 环境不存在 → `conda create -n vid2guide python=3.11 && conda activate vid2guide && pip install -r vid2guide/requirements.txt`

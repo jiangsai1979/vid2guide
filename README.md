@@ -30,7 +30,7 @@ Output:
 YouTube URL → yt-dlp Download → Whisper STT → AI Step Analysis → ffmpeg Screenshots → AI Vision Enhancement → Markdown/PDF
 ```
 
-1. **yt-dlp download** — Downloads YouTube video (720p)
+1. **yt-dlp download** — Downloads YouTube video (720p, H.264 preferred for best compatibility)
 2. **Whisper transcription** — Extracts speech-to-text with timestamps
 3. **AI step identification** — Doubao LLM analyzes subtitles to identify steps with confidence scores
 4. **Screenshot capture** — ffmpeg grabs frames at each step's key timestamp
@@ -137,6 +137,18 @@ vid2guide/
 │       └── vid2guide.md  # Skill knowledge file
 └── README.md
 ```
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| yt-dlp download fails | `pip install --upgrade yt-dlp` |
+| Whisper model download slow | First run only; cached afterwards |
+| ARK API 404 | Check `ARK_API_KEY` in `.env`; model should be `doubao-seed-2-0-pro-260215` |
+| ffmpeg not installed | `brew install ffmpeg` (macOS) or `apt install ffmpeg` (Linux) |
+| Some screenshots fail (WARNING in logs) | ffmpeg doesn't support the video codec (e.g. AV1). Install full ffmpeg: `brew install ffmpeg` |
+| All screenshots fail (RuntimeError) | ffmpeg can't decode the video. Install full ffmpeg: `brew install ffmpeg` |
+| conda env not found | `conda create -n vid2guide python=3.11 && conda activate vid2guide && pip install -r requirements.txt` |
 
 ## Credits
 

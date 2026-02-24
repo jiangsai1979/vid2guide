@@ -28,7 +28,7 @@
 YouTube URL → yt-dlp 下载 → Whisper 语音转文字 → AI 步骤识别 → ffmpeg 截图 → AI 看图增强 → Markdown/PDF
 ```
 
-1. **yt-dlp 下载** — 下载 YouTube 视频（720p）
+1. **yt-dlp 下载** — 下载 YouTube 视频（720p，优先 H.264 编码以保证兼容性）
 2. **Whisper 转录** — 语音转文字，生成带时间戳的字幕
 3. **AI 步骤识别** — 豆包大模型分析字幕，识别操作步骤并给出置信度评分
 4. **截图生成** — ffmpeg 在每个步骤的关键时间点截取画面
@@ -135,6 +135,18 @@ vid2guide/
 ├── README.md             # English
 └── README_CN.md          # 中文
 ```
+
+## 故障排查
+
+| 问题 | 解决方法 |
+|------|----------|
+| yt-dlp 下载失败 | `pip install --upgrade yt-dlp` |
+| Whisper 模型下载慢 | 首次运行需等待，后续有缓存 |
+| ARK API 404 | 检查 `.env` 中 `ARK_API_KEY`，模型名应为 `doubao-seed-2-0-pro-260215` |
+| ffmpeg 未安装 | `brew install ffmpeg`（macOS）或 `apt install ffmpeg`（Linux） |
+| 部分截图生成失败（日志中有 WARNING） | ffmpeg 不支持该视频编码格式（如 AV1），安装完整版 ffmpeg：`brew install ffmpeg` |
+| 所有截图均失败（RuntimeError） | ffmpeg 无法解码该视频，安装完整版 ffmpeg：`brew install ffmpeg` |
+| conda 环境不存在 | `conda create -n vid2guide python=3.11 && conda activate vid2guide && pip install -r requirements.txt` |
 
 ## 致谢
 
