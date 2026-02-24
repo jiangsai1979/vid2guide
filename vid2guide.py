@@ -646,29 +646,75 @@ def find_first_file(ext: str) -> Optional[str]:
     return files[0] if files else None
 
 
+def download_youtube(url: str, output_dir: str = ".") -> str:
+    """
+    Download a YouTube video using yt-dlp.
+    :param url: YouTube URL
+    :param output_dir: Directory to save the video
+    :return: Path to the downloaded video file
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Use yt-dlp to download, limit to 720p
+    output_template = str(output_dir / "%(title)s.%(ext)s")
+    cmd = [
+        "yt-dlp",
+        "-f", "best[height<=720]",
+        "-o", output_template,
+        "--print", "after_move:filepath",
+        url,
+    ]
+    print(f"Downloading video from: {url}")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"yt-dlp download failed: {result.stderr}")
+
+    # The last non-empty line of stdout is the downloaded file path
+    downloaded_path = result.stdout.strip().split('\n')[-1].strip()
+    if not Path(downloaded_path).exists():
+        # Fallback: find the newest mp4 in output_dir
+        import glob
+        mp4s = sorted(glob.glob(str(output_dir / "*.mp4")), key=os.path.getmtime, reverse=True)
+        if mp4s:
+            downloaded_path = mp4s[0]
+        else:
+            raise FileNotFoundError(f"Download succeeded but cannot find video file in {output_dir}")
+
+    print(f"Video downloaded: {downloaded_path}")
+    return downloaded_path
+
+
 async def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='操作视频 → 步骤操作文档生成器'
+        description='vid2guide — Turn any video into a step-by-step tutorial'
     )
-    parser.add_argument('--api_key', help='火山引擎ARK API Key（可选，已在.env中设置则不需要）')
-    parser.add_argument('--video_path', help='视频文件路径（默认自动查找当前目录MP4文件）')
-    parser.add_argument('--srt_path', help='SRT字幕文件路径（可选，不提供则自动用Whisper生成）')
-    parser.add_argument('--fps', type=float, default=1, help='抽帧频率，默认1帧/秒')
-    parser.add_argument('--output_dir', help='输出目录（默认以视频文件名命名）')
-    parser.add_argument('--whisper_model', default='base', help='Whisper模型，可选 tiny/base/small/medium/large')
-    parser.add_argument('--use_video', action='store_true', help='启用视频上传分析模式（上传视频给AI看画面，较贵）')
-    parser.add_argument('--file_id', help='已上传的视频文件ID（仅 --use_video 模式下有效）')
-    parser.add_argument('--max_vision', type=int, default=4, help='最多对几个低自信度步骤调用 AI 看图增强（默认4）')
-    parser.add_argument('--web_search', action='store_true', help='启用联网搜索增强文档内容（需要 API 支持）')
+    parser.add_argument('--url', help='YouTube URL to download (requires yt-dlp)')
+    parser.add_argument('--api_key', help='Volcengine ARK API Key (optional if set in .env)')
+    parser.add_argument('--video_path', help='Path to local video file (auto-detect MP4 if omitted)')
+    parser.add_argument('--srt_path', help='Path to SRT subtitle file (optional, auto-generate with Whisper)')
+    parser.add_argument('--fps', type=float, default=1, help='Frame extraction rate (default: 1 fps)')
+    parser.add_argument('--output_dir', help='Output directory (default: named after video)')
+    parser.add_argument('--whisper_model', default='base', help='Whisper model: tiny/base/small/medium/large')
+    parser.add_argument('--use_video', action='store_true', help='Upload video to AI for analysis (expensive)')
+    parser.add_argument('--file_id', help='Pre-uploaded video file ID (--use_video mode only)')
+    parser.add_argument('--max_vision', type=int, default=4, help='Max AI vision enhancement calls (default: 4)')
+    parser.add_argument('--web_search', action='store_true', help='Enable web search to enrich documentation')
 
     args = parser.parse_args()
 
-    # 确定视频文件路径
+    # Step 0: Download YouTube video if --url is provided
+    if args.url:
+        download_dir = args.output_dir or "."
+        args.video_path = download_youtube(args.url, download_dir)
+
+    # Determine video file path
     video_path = args.video_path or find_first_file('mp4')
     if not video_path:
-        print("错误：未找到MP4文件，请通过 --video_path 指定")
+        print("Error: No MP4 file found. Use --video_path or --url to specify.")
         return
 
     print(f"视频文件: {video_path}")

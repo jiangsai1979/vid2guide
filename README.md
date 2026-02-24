@@ -43,27 +43,25 @@ cp .env.example .env
 ### Usage
 
 ```bash
-# Basic: auto-detect MP4 in current directory
-python vid2guide.py
+# From a YouTube URL (auto-download + generate tutorial)
+python vid2guide.py --url "https://www.youtube.com/watch?v=xxx"
 
-# Specify video file
+# From a local video file
 python vid2guide.py --video_path your_video.mp4
 
 # Use existing subtitles (skip Whisper)
 python vid2guide.py --video_path your_video.mp4 --srt_path subtitles.srt
 
 # Enable web search to enrich documentation
-python vid2guide.py --video_path your_video.mp4 --web_search
-
-# Video upload mode (AI watches the video directly, more expensive)
-python vid2guide.py --video_path your_video.mp4 --use_video
+python vid2guide.py --url "https://www.youtube.com/watch?v=xxx" --web_search
 ```
 
 ### Parameters
 
 | Parameter | Description | Default |
 |---|---|---|
-| `--video_path` | Path to video file | Auto-detect MP4 in current dir |
+| `--url` | YouTube URL (auto-download with yt-dlp) | — |
+| `--video_path` | Path to local video file | Auto-detect MP4 in current dir |
 | `--srt_path` | Path to SRT subtitle file | Auto-generate with Whisper |
 | `--output_dir` | Output directory | Named after video file |
 | `--whisper_model` | Whisper model size | `base` |
@@ -90,10 +88,13 @@ output_dir/
 
 ## Use as a Claude Code Skill
 
-vid2guide can be used as a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) custom command. Copy the files from the `claude-code/` section in this repo:
+vid2guide can be used as a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) custom command. Copy the files from the `claude-code/` directory:
 
-- `.claude/commands/vid2guide.md` — Slash command (`/vid2guide <YouTube URL>`)
-- `.claude/skills/vid2guide.md` — Skill knowledge file
+```bash
+# From the vid2guide repo root
+cp -r claude-code/commands/ /path/to/your/project/.claude/commands/
+cp -r claude-code/skills/ /path/to/your/project/.claude/skills/
+```
 
 Then in Claude Code, type `/vid2guide https://youtube.com/watch?v=xxx` to auto-download and generate a tutorial.
 

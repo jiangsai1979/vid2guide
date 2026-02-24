@@ -3,3 +3,4 @@ python-dotenv
 openai-whisper
 markdown
 weasyprint
+yt-dlp
