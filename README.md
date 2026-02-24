@@ -28,7 +28,7 @@ Video → Whisper STT → AI Step Analysis → ffmpeg Screenshots → AI Vision 
 ### Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/vid2guide.git
+git clone https://github.com/jiangsai1979/vid2guide.git
 cd vid2guide
 pip install -r requirements.txt
 ```
