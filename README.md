@@ -1,5 +1,7 @@
 # vid2guide
 
+[中文文档](README_CN.md)
+
 A Claude Code skill that turns YouTube videos into step-by-step tutorials with screenshots.
 
 Type `/vid2guide <YouTube URL>` in Claude Code, and it will automatically download the video, transcribe it, identify operation steps, capture screenshots, and generate a Markdown + PDF tutorial.
